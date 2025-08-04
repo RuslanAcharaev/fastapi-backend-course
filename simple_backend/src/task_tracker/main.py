@@ -4,19 +4,21 @@ from fastapi import FastAPI, Body, HTTPException
 from starlette.responses import Response, JSONResponse
 
 from models.tasks import TaskIn, TaskDB
-from external_api.mockapi import Tasks
+from external_api.api import Mockapi, Cloudflare
 
 app = FastAPI()
 
 
 @app.get("/tasks")
 def get_tasks() -> list[TaskDB]:
-    return Tasks.get_tasks()
+    return Mockapi.get()
 
 
 @app.post("/tasks")
 def create_task(task: TaskIn) -> Response:
-    response = Tasks.add_task(task.model_dump_json())
+    description = Cloudflare.post(task.title)
+    data = {'title': task.title, 'description': description}
+    response = Mockapi.post(data)
     if response:
         return JSONResponse(
             status_code=201,
@@ -26,7 +28,7 @@ def create_task(task: TaskIn) -> Response:
 
 @app.put("/tasks/{task_id}")
 def update_task(task_id: int, task_in: Annotated[TaskIn, Body()]) -> Response:
-    response = Tasks.update_task(task_id, task_in.model_dump_json())
+    response = Mockapi.update(task_id, task_in.model_dump_json())
     if response != 'Not found':
         return JSONResponse(
             status_code=201,
@@ -38,7 +40,7 @@ def update_task(task_id: int, task_in: Annotated[TaskIn, Body()]) -> Response:
 
 @app.delete("/tasks/{task_id}", response_model=dict)
 def delete_task(task_id: int):
-    response = Tasks.delete_task(task_id)
+    response = Mockapi.delete(task_id)
     if response != 'Not found':
         return JSONResponse(
             status_code=200,
