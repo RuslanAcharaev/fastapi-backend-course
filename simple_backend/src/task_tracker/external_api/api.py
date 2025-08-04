@@ -1,4 +1,6 @@
 import json
+from abc import ABC, abstractmethod
+
 import requests
 from environs import Env
 
@@ -10,16 +12,23 @@ account_id = env("CF_ACCOUNT_ID")
 headers = {"Content-Type": "application/json"}
 
 
-class Mockapi:
+class BaseHTTPClient(ABC):
+    @staticmethod
+    @abstractmethod
+    def post(data):
+        pass
+
+
+class Mockapi(BaseHTTPClient):
+
     @staticmethod
     def get():
         response = requests.get(f'{url}/tasks')
         return response.json()
 
     @staticmethod
-    def post(task):
-        data = json.dumps(task)
-        response = requests.post(f'{url}/tasks', headers=headers, data=data)
+    def post(data):
+        response = requests.post(f'{url}/tasks', headers=headers, data=json.dumps(data))
         return response.json()
 
     @staticmethod
@@ -33,13 +42,13 @@ class Mockapi:
         return response.json()
 
 
-class Cloudflare:
+class Cloudflare(BaseHTTPClient):
     @staticmethod
-    def post(title):
+    def post(data):
         inputs = [
             {"role": "system", "content": "Ты дружелюбный ассистент, который помогает решать различного рода задачи"},
             {"role": "user",
-             "content": f"Передо мной поставлена задача: '{title}'. Расскажи кратко, как мне её решить."},
+             "content": f"Передо мной поставлена задача: '{data}'. Расскажи кратко, как мне её решить."},
         ]
         input = {"messages": inputs}
         header = {
