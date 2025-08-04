@@ -8,6 +8,6 @@ class TaskIn(BaseModel):
     description: Optional[str] = None
 
 
-class TaskOut(TaskIn):
+class TaskDB(TaskIn):
     id: int
     status: bool = False
